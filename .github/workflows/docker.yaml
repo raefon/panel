@@ -26,7 +26,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/kubectyl/panel
+          images: ghcr.io/raefon/panel
           flavor: |
             latest=false
           tags: |
