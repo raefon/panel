@@ -16,6 +16,9 @@ on:
 jobs:
   push:
     name: Push
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-20.04
     if: "!contains(github.ref, 'develop') || (!contains(github.event.head_commit.message, 'skip docker') && !contains(github.event.head_commit.message, 'docker skip'))"
     steps:
