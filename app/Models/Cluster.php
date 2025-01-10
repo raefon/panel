@@ -134,7 +134,7 @@ class Cluster extends Model
         'public' => true,
         'behind_proxy' => false,
         'daemonBase' => '/var/lib/kubectyl/volumes',
-        'sftp_image' => 'ghcr.io/kubectyl/sftp-server:latest',
+        'sftp_image' => 'ghcr.io/raefon/sftp-server:latest',
         'sftp_port' => 2022,
         'daemonListen' => 8080,
         'maintenance_mode' => false,

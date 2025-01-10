@@ -237,7 +237,7 @@
                     <div class="row">
                         <div class="form-group col-md-6">
                             <label for="pContainerSFTPImage" class="form-label">Container SFTP Image</label>
-                            <input type="text" name="sftp_image" id="pContainerSFTPImage" class="form-control" value="ghcr.io/kubectyl/sftp-server:latest"/>
+                            <input type="text" name="sftp_image" id="pContainerSFTPImage" class="form-control" value="ghcr.io/raefon/sftp-server:latest"/>
                             <p class="text-muted small">The docker image used for the SFTP server.</p>
                         </div>
                         <div class="form-group col-md-6">

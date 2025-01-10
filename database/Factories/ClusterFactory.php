@@ -40,7 +40,7 @@ class ClusterFactory extends Factory
             'service_type' => 'nodeport',
             'storage_class' => 'manual',
             'ns' => 'default',
-            'sftp_image' => 'ghcr.io/kubectyl/sftp-server:latest',
+            'sftp_image' => 'ghcr.io/raefon/sftp-server:latest',
             'sftp_port' => 2022,
             'maintenance_mode' => false,
             'dns_policy' => 'clusterfirst',
