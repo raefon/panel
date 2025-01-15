@@ -141,11 +141,11 @@ if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
                 --locationId=$location_id \
                 --fqdn=$INGRESS_KUBER \
                 --public=0 \
-                --scheme=https \
+                --scheme=http \
                 --proxy=0 \
                 --maintenance=0 \
                 --uploadSize=128 \
-                --daemonListeningPort=443 \
+                --daemonListeningPort=8080 \
                 --daemonBase=/var/lib/kubectyl/volumes \
                 --host=$API_SERVER \
                 --bearer_token=$TOKEN \
