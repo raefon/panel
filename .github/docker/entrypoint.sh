@@ -142,7 +142,7 @@ if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
                 --fqdn=$INGRESS_KUBER \
                 --public=0 \
                 --scheme=http \
-                --proxy=0 \
+                --proxy=1 \
                 --maintenance=0 \
                 --uploadSize=128 \
                 --daemonListeningPort=8080 \
