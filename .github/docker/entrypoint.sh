@@ -29,6 +29,49 @@ else
     ln -s /app/var/.env /app/
 fi
 
+echo "Checking if https is required."
+if [ -f /etc/nginx/http.d/panel.conf ]; then
+    echo "Using nginx config already in place."
+    if [ $LE_EMAIL ]; then
+        if [[ ! -f "/etc/nginx/certs/tls.key" && ! -f "/etc/nginx/certs/tls.crt" ]]; then
+            echo "Checking for cert update"
+            certbot certonly -d $(echo $APP_URL | sed 's~http[s]*://~~g') --standalone -m $LE_EMAIL --agree-tos -n
+        fi
+    else
+        echo "No letsencrypt email is set"
+    fi
+else
+    echo "Checking if letsencrypt email is set."
+    if [ -z $LE_EMAIL ]; then
+        echo "No letsencrypt email is set using http config."
+        cp .github/docker/default.conf /etc/nginx/http.d/panel.conf
+    else
+        echo "writing ssl config"
+        cp .github/docker/default_ssl.conf /etc/nginx/http.d/panel.conf
+
+        if [[ -f "/etc/nginx/certs/tls.key" && -f "/etc/nginx/certs/tls.crt" ]]; then
+            cert_file="/etc/nginx/certs/tls.crt"
+            key_file="/etc/nginx/certs/tls.key"
+
+            sed -i "s#ssl_certificate /etc/letsencrypt/live/[^/]\+/fullchain.pem;#ssl_certificate $cert_file;#" /etc/nginx/http.d/panel.conf
+            sed -i "s#ssl_certificate_key /etc/letsencrypt/live/[^/]\+/privkey.pem;#ssl_certificate_key $key_file;#" /etc/nginx/http.d/panel.conf
+
+            echo "using existing certificates from cert-manager"
+
+            echo "updating nginx domain name"
+            sed -i "s|<domain>|$(echo $APP_URL | sed 's~http[s]*://~~g')|g" /etc/nginx/http.d/panel.conf
+        else
+            echo "updating nginx domain name"
+            sed -i "s|<domain>|$(echo $APP_URL | sed 's~http[s]*://~~g')|g" /etc/nginx/http.d/panel.conf
+
+            echo "generating certs"
+            certbot certonly -d $(echo $APP_URL | sed 's~http[s]*://~~g') --standalone -m $LE_EMAIL --agree-tos -n
+        fi
+    fi
+    echo "Removing the default nginx config"
+    rm -rf /etc/nginx/http.d/default.conf
+fi
+
 if [[ -z $DB_PORT ]]; then
     echo -e "DB_PORT not specified, defaulting to 3306"
     DB_PORT=3306
@@ -126,7 +169,19 @@ if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
         ## create or update kuber configmap
         echo -e "Creating or updating kuber configmap."
 
-        YAML_DATA=$(php artisan p:cluster:configuration $cluster_id --format=yaml | sed 's#remote: http://localhost#remote: http://'$INGRESS_PANEL'#' | sed ':a;N;$!ba;s/\n/\\n/g')
+        if [[ -f "/etc/nginx/certs/tls.key" && -f "/etc/nginx/certs/tls.crt" ]]; then
+            echo -e "using cert-manager certificates"
+            YAML_DATA=$(
+                php artisan p:cluster:configuration $cluster_id --format=yaml |
+                    sed -e 's#^\(\s*cert:\s*\).*#\1/etc/kubectyl/certs/tls.crt#' \
+                        -e 's#^\(\s*key:\s*\).*#\1/etc/kubectyl/certs/tls.key#' \
+                        -e 's#^\(\s*remote:\s*\).*#\1https://'$INGRESS_PANEL'#' |
+                    sed ':a;N;$!ba;s/\n/\\n/g'
+            )
+        else
+            echo -e "using default certificates"
+            YAML_DATA=$(php artisan p:cluster:configuration $cluster_id --format=yaml | sed 's#remote: http://localhost#remote: https://'$INGRESS_PANEL'#' | sed ':a;N;$!ba;s/\n/\\n/g')
+        fi
 
         # Check if the ConfigMap exists
         HTTP_STATUS=$(curl -sk -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" \
